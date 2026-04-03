@@ -1,0 +1,21 @@
+# CMake build directory
+build/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+compile_commands.json
+
+# Executable binaries (Linux/macOS)
+daily_game
+
+# Если будете тестировать на Windows
+*.exe
+*.out
+a.out
