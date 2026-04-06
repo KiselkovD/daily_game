@@ -1,0 +1,43 @@
+# Doxyfile 1.9.8
+
+PROJECT_NAME           = "Daily Game"
+PROJECT_BRIEF          = "Учебный фреймворк для консольных игр на C++"
+PROJECT_NUMBER         = 1.0
+OUTPUT_DIRECTORY       = docs
+CREATE_SUBDIRS         = NO
+ALLOW_UNICODE_NAMES    = YES
+
+# Входные директории и расширения
+INPUT                  = include/ src/
+FILE_PATTERNS          = *.hpp *.cpp
+RECURSIVE              = YES
+
+# Язык и кодировка
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = NO
+OPTIMIZE_OUTPUT_FOR_C  = NO
+OPTIMIZE_OUTPUT_JAVA   = NO
+
+# Визуализация
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+HTML_COLORSTYLE_HUE    = 200
+
+# Извлечение всего (включая приватные методы – полезно для обучения)
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+
+# Включить диаграммы наследования
+HAVE_DOT               = YES
+UML_LOOK               = YES
+CLASS_DIAGRAMS         = YES
+
+# Предполагаем, что код на C++ 17
+PREDEFINED             = __cplusplus=201703L
+
+# Обработка встроенных комментариев (/// и /**)
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES

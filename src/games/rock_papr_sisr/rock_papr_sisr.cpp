@@ -1,80 +1,137 @@
-// src/games/rock_papr_sisr/rock_papr_sisr.cpp
 #include "rock_papr_sisr.hpp"
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
-RockPaperScissors::RockPaperScissors() : Game() {}
+#include <stdexcept>
+
+RockPaperScissors::RockPaperScissors(
+    std::unique_ptr<IRenderer> renderer,
+    std::unique_ptr<IInputHandler> inputHandler, Player &player,
+    Scoreboard &scoreboard, Storage &storage)
+    : m_renderer(std::move(renderer)), m_inputHandler(std::move(inputHandler)),
+      m_player(player), m_scoreboard(scoreboard), m_storage(storage) {}
 
 void RockPaperScissors::init() {
-  std::srand((unsigned)std::time(nullptr));
-  std::cout << "Rock Paper Scissors game initialized." << std::endl;
+  std::srand(static_cast<unsigned>(std::time(nullptr)));
+  auto stats = m_scoreboard.getStats(m_gameId);
+  m_wins = stats.wins;
+  m_losses = stats.losses;
+  m_ties = stats.ties;
+  m_roundsPlayed = m_wins + m_losses + m_ties;
+  m_renderer->clearScreen();
+  m_renderer->println("Rock Paper Scissors game initialized.");
 }
 
 const char *RockPaperScissors::getName() const { return "Rock Paper Scissors"; }
 
 void RockPaperScissors::run() {
-  std::cout << "\nPlaying Rock Paper Scissors!" << std::endl;
-  int choice;
-  while (true) {
-    std::cout << "\nYour turn: ";
-    Move player = getPlayerMove();
-    Move computer = getComputerMove();
-    Result res = judge(player, computer);
-    std::cout << "Computer turn: "
-              << (computer == Move::ROCK    ? "Rock"
-                  : computer == Move::PAPER ? "Paper"
-                                            : "Scissors")
-              << "\n";
+  m_renderer->println("\n=== Rock Paper Scissors ===");
+  m_renderer->println("Enter your move: 1=Rock, 2=Paper, 3=Scissors");
+  m_renderer->println("Type 'quit' to finish the game.");
+
+  bool running = true;
+  while (running && !m_quitRequested) {
+    m_renderer->print("\nYour choice: ");
+    Move playerMove;
+    try {
+      playerMove = getPlayerMove();
+    } catch (const std::runtime_error &) {
+      m_quitRequested = true;
+      break;
+    }
+    Move computerMove = getComputerMove();
+    Result res = judge(playerMove, computerMove);
+
+    auto moveToStr = [](Move m) -> std::string {
+      switch (m) {
+      case Move::ROCK:
+        return "Rock";
+      case Move::PAPER:
+        return "Paper";
+      case Move::SCISSORS:
+        return "Scissors";
+      }
+      return "";
+    };
+    m_renderer->print("Computer: ");
+    m_renderer->println(moveToStr(computerMove));
 
     switch (res) {
     case Result::WIN:
-      std::cout << "you win" << std::endl;
+      m_renderer->println("You win this round!");
+      m_player.addToGeneralScore(10);
+      m_wins++;
       break;
     case Result::LOSE:
-      std::cout << "you lose" << std::endl;
+      m_renderer->println("You lose this round.");
+      m_losses++;
       break;
-    default:
-      std::cout << "its tie" << std::endl;
+    case Result::TIE:
+      m_renderer->println("It's a tie.");
+      m_ties++;
+      break;
     }
+    m_roundsPlayed++;
+    updateStatistics(res);
 
-    std::cout << "End the game? (0 - no, 1 - true)" << std::endl;
-    std::cin >> choice;
-    if (choice)
-      break;
+    m_renderer->print("\nPlay again? (yes/no): ");
+    std::string answer = m_inputHandler->waitForInput();
+    if (answer != "yes" && answer != "y")
+      running = false;
   }
+  showFinalStats();
+  m_scoreboard.setStats(m_gameId, {m_wins, m_losses, m_ties});
 }
 
 void RockPaperScissors::cleanup() {
-  std::cout << "Rock Paper Scissors exited.\n";
+  m_renderer->println("Rock Paper Scissors finished. Goodbye!");
+  m_inputHandler->stop();
 }
 
-Move RockPaperScissors::getPlayerMove() {
-  int choice;
+RockPaperScissors::Move RockPaperScissors::getPlayerMove() {
   while (true) {
-    std::cout << "Enter 1 (Rock), 2 (Paper), 3 (Scissors): ";
-    std::cin >> choice;
-    if (choice == 1)
+    std::string input = m_inputHandler->waitForInput();
+    if (input == "quit" || input == "q") {
+      throw std::runtime_error("quit");
+    }
+    if (input == "1")
       return Move::ROCK;
-    if (choice == 2)
+    if (input == "2")
       return Move::PAPER;
-    if (choice == 3)
+    if (input == "3")
       return Move::SCISSORS;
+    m_renderer->print("Invalid input. Enter 1,2,3 or 'quit': ");
   }
 }
 
-Move RockPaperScissors::getComputerMove() {
+RockPaperScissors::Move RockPaperScissors::getComputerMove() {
   int r = std::rand() % 3;
-  if (r == 0)
-    return Move::ROCK;
-  if (r == 1)
-    return Move::PAPER;
-  return Move::SCISSORS;
+  return static_cast<Move>(r);
 }
 
-Result RockPaperScissors::judge(Move player, Move computer) {
+RockPaperScissors::Result
+RockPaperScissors::judge(RockPaperScissors::Move player,
+                         RockPaperScissors::Move computer) {
   if (player == computer)
     return Result::TIE;
-  if ((((int)player + 1) == 4 ? 0 : ((int)player + 1)) == (int)computer)
-    return Result::LOSE;
-  return Result::WIN;
+  if ((player == Move::ROCK && computer == Move::SCISSORS) ||
+      (player == Move::PAPER && computer == Move::ROCK) ||
+      (player == Move::SCISSORS && computer == Move::PAPER))
+    return Result::WIN;
+  return Result::LOSE;
+}
+
+void RockPaperScissors::updateStatistics(Result res) {
+  bool win = (res == Result::WIN);
+  bool tie = (res == Result::TIE);
+  m_scoreboard.recordResult(m_gameId, win, tie);
+}
+
+void RockPaperScissors::showFinalStats() {
+  m_renderer->println("\n=== Game Statistics ===");
+  m_renderer->println("Total rounds: " + std::to_string(m_roundsPlayed));
+  m_renderer->println("Wins : " + std::to_string(m_wins));
+  m_renderer->println("Losses: " + std::to_string(m_losses));
+  m_renderer->println("Ties : " + std::to_string(m_ties));
+  m_renderer->println("Your general score: " +
+                      std::to_string(m_player.getGeneralScore()));
 }

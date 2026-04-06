@@ -1,21 +1,130 @@
-# mini games
-https://www.perplexity.ai/search/izza-poiavleniia-chertovykh-ne-Hwjq8h.cRWmldGz0pEFZgA?sm=d#3
-list:
+# 🎮 Daily Game – учебный проект по ООП на C++
 
-- gess_number
-- wordle
-- mini‑RPG
-- rock papper sissors
-- snake
-- tetris
-- arifmetic test
-- maze
-- to do list
-- bank
-- story gen
-- cross road
-- ping pong
-- sea battle
-- pacman
-- paint
-- sell & buy
+[![C++](https://img.shields.io/badge/C++-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
+[![CMake](https://img.shields.io/badge/CMake-3.10+-green.svg)](https://cmake.org)
+[![Doxygen](https://img.shields.io/badge/Doxygen-1.9+-orange.svg)](https://www.doxygen.nl)
+
+Консольный фреймворк для мини-игр, созданный для изучения принципов объектно-ориентированного программирования (инкапсуляция, наследование, полиморфизм, абстрактные классы, фабрики, паттерны).
+
+**Реализованные игры:**
+
+- ✊ Камень, ножницы, бумага (Rock‑Paper‑Scissors)
+
+**Планируются:** угадай число, Wordle, мини‑RPG, змейка, тетрис, арфиметический тест, лабиринт, список дел, банк, генератор историй, перекрёсток, пинг‑понг, морской бой, Pacman, Paint, симулятор продаж.
+
+---
+
+## 📦 Требования (зависимости)
+
+- Компилятор с поддержкой **C++17** (GCC 9+, Clang 10+, MSVC 2019+)
+- **CMake** (версия 3.10 или выше)
+- **Doxygen** (опционально, для генерации документации)
+
+### Установка на Ubuntu / Debian
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake doxygen
+```
+
+---
+
+## 🔧 Сборка и запуск
+
+### Способ 1 – через предоставленный Makefile (рекомендуется)
+
+```bash
+make build       # сборка проекта
+make run         # запуск (автоматически создаст data/)
+make clean       # удалить папку build/
+make clean-data  # удалить сохранения (игровую статистику)
+make clean-all   # полная очистка (build + data)
+```
+
+### Способ 2 – вручную через CMake
+
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build .
+./daily_game
+```
+
+> При первом запуске автоматически создадутся файлы `data/player.dat` и `data/scoreboard.dat`.
+
+---
+
+## 📚 Генерация документации (Doxygen)
+
+1. Установите Doxygen (см. выше).
+2. Из корня проекта выполните:
+
+   ```bash
+    make docs
+    xdg-open docs/html/index.html
+   ```
+
+   Документация будет сгенерирована в папку `docs/html/`. Откройте `docs/html/index.html` в браузере.
+
+> Doxygen-комментарии написаны во всех публичных заголовочных файлах (`include/*.hpp`).  
+> Конфигурация хранится в `Doxyfile`.
+
+---
+
+## 🗂 Структура проекта
+
+```
+daily_game/
+├── CMakeLists.txt          # конфигурация CMake
+├── Makefile                # удобные цели (build, run, docs...)
+├── Doxyfile                # конфигурация Doxygen
+├── README.md               # этот файл
+├── include/                # публичные заголовки (.hpp)
+│   ├── game.hpp            # абстрактный класс Game
+│   ├── player.hpp          # класс Player
+│   ├── renderer.hpp        # интерфейс IRenderer и ConsoleRenderer
+│   ├── input_handler.hpp   # асинхронный ввод с консоли
+│   ├── scoreboard.hpp      # хранение статистики по играм
+│   ├── storage.hpp         # интерфейс Storage + файловая реализация
+│   ├── ui_factory.hpp      # фабрика UI-компонентов
+│   └── events.hpp          # вспомогательные структуры (не используется)
+├── src/                    # исходные коды (.cpp)
+│   ├── main.cpp
+│   ├── core/               # реализация инфраструктуры
+│   └── games/              # конкретные игры (rock_papr_sisr и т.д.)
+└── data/                   # пользовательские данные (создаются автоматически)
+    ├── player.dat
+    └── scoreboard.dat
+```
+
+---
+
+## 🧠 ООП-концепции, демонстрируемые в проекте
+
+| Концепция                | Пример                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| **Инкапсуляция**         | Приватные поля `Player::m_name`, `Scoreboard::m_stats`                          |
+| **Наследование**         | `RockPaperScissors` → `Game`, `ConsoleRenderer` → `IRenderer`                   |
+| **Полиморфизм**          | `Game*` указывает на конкретную игру, вызов `run()` через виртуальную таблицу   |
+| **Абстрактные классы**   | `Game`, `IRenderer`, `IInputHandler`, `Storage`                                 |
+| **Фабрика**              | `ConsoleUIFactory` создаёт пару `Renderer + InputHandler`                       |
+| **Стратегия**            | `FileStorage` инкапсулирует алгоритм сохранения/загрузки                        |
+| **Dependency Injection** | В конструктор игры передаются готовые зависимости (`renderer`, `player` и т.д.) |
+
+---
+
+## 📜 Лицензия
+
+Это учебный проект, распространяется под лицензией **MIT**.  
+Вы можете свободно использовать, модифицировать и распространять код с указанием авторства.
+
+---
+
+## 🤝 Вклад
+
+Проект создан в образовательных целях. Если хотите добавить новую игру или улучшить архитектуру – создавайте pull request или issue на [GitHub](#) (ссылка будет добавлена позже).
+
+---
+
+**Автор:** Ваше Имя  
+**Год:** 2026
