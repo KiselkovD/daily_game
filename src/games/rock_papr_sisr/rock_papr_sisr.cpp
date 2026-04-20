@@ -1,35 +1,34 @@
 #include "rock_papr_sisr.hpp"
+#include "game_metadata.hpp"
 #include <cstdlib>
 #include <ctime>
 #include <stdexcept>
 
 RockPaperScissors::RockPaperScissors(
-    std::unique_ptr<IRenderer> renderer,
+    const GameMetadata &meta, std::unique_ptr<IRenderer> renderer,
     std::unique_ptr<IInputHandler> inputHandler, Player &player,
     Scoreboard &scoreboard, Storage &storage)
-    : m_renderer(std::move(renderer)), m_inputHandler(std::move(inputHandler)),
-      m_player(player), m_scoreboard(scoreboard), m_storage(storage) {}
+    : Game(meta), m_renderer(std::move(renderer)),
+      m_inputHandler(std::move(inputHandler)), m_player(player),
+      m_scoreboard(scoreboard), m_storage(storage) {}
 
 void RockPaperScissors::init() {
   std::srand(static_cast<unsigned>(std::time(nullptr)));
-  auto stats = m_scoreboard.getStats(m_gameId);
+  auto stats = m_scoreboard.getStats(getGameId());
   m_wins = stats.wins;
   m_losses = stats.losses;
   m_ties = stats.ties;
   m_roundsPlayed = m_wins + m_losses + m_ties;
   m_renderer->clearScreen();
-  m_renderer->println("Rock Paper Scissors game initialized.");
+  m_renderer->println((std::string)getName() + " game initialized.");
 }
 
-const char *RockPaperScissors::getName() const { return "Rock Paper Scissors"; }
-
 void RockPaperScissors::run() {
-  m_renderer->println("\n=== Rock Paper Scissors ===");
+  m_renderer->println("\n=== " + (std::string)getName() + " ===");
   m_renderer->println("Enter your move: 1=Rock, 2=Paper, 3=Scissors");
-  m_renderer->println("Type 'quit' to finish the game.");
+  m_renderer->println("Type 'q' to finish the game.");
 
-  bool running = true;
-  while (running && !m_quitRequested) {
+  while (!m_quitRequested) {
     m_renderer->print("\nYour choice: ");
     Move playerMove;
     try {
@@ -72,34 +71,28 @@ void RockPaperScissors::run() {
     }
     m_roundsPlayed++;
     updateStatistics(res);
-
-    m_renderer->print("\nPlay again? (yes/no): ");
-    std::string answer = m_inputHandler->waitForInput();
-    if (answer != "yes" && answer != "y")
-      running = false;
   }
   showFinalStats();
-  m_scoreboard.setStats(m_gameId, {m_wins, m_losses, m_ties});
+  m_scoreboard.setStats(getGameId(), {m_wins, m_losses, m_ties});
 }
 
 void RockPaperScissors::cleanup() {
-  m_renderer->println("Rock Paper Scissors finished. Goodbye!");
+  m_renderer->println((std::string)getName() + " finished. Goodbye!");
   m_inputHandler->stop();
 }
 
 RockPaperScissors::Move RockPaperScissors::getPlayerMove() {
   while (true) {
     std::string input = m_inputHandler->waitForInput();
-    if (input == "quit" || input == "q") {
-      throw std::runtime_error("quit");
-    }
     if (input == "1")
       return Move::ROCK;
     if (input == "2")
       return Move::PAPER;
     if (input == "3")
       return Move::SCISSORS;
-    m_renderer->print("Invalid input. Enter 1,2,3 or 'quit': ");
+    if (input == "q")
+      throw std::runtime_error("quit");
+    m_renderer->print("Invalid input. Enter 1,2,3 or 'q': ");
   }
 }
 
@@ -123,7 +116,7 @@ RockPaperScissors::judge(RockPaperScissors::Move player,
 void RockPaperScissors::updateStatistics(Result res) {
   bool win = (res == Result::WIN);
   bool tie = (res == Result::TIE);
-  m_scoreboard.recordResult(m_gameId, win, tie);
+  m_scoreboard.recordResult(getGameId(), win, tie);
 }
 
 void RockPaperScissors::showFinalStats() {

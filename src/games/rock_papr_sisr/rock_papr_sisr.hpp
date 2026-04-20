@@ -30,14 +30,14 @@ public:
    * @param storage      Хранилище (не используется в данной игре, но передаётся
    * для единообразия).
    */
-  RockPaperScissors(std::unique_ptr<IRenderer> renderer,
+  RockPaperScissors(const GameMetadata &meta,
+                    std::unique_ptr<IRenderer> renderer,
                     std::unique_ptr<IInputHandler> inputHandler, Player &player,
                     Scoreboard &scoreboard, Storage &storage);
 
   void init() override;
   void run() override;
   void cleanup() override;
-  const char *getName() const override;
 
 private:
   enum class Move { ROCK, PAPER, SCISSORS };
@@ -54,7 +54,6 @@ private:
   Player &m_player;
   Scoreboard &m_scoreboard;
   Storage &m_storage;
-  const int m_gameId = 0;
   int m_roundsPlayed = 0;
   int m_wins = 0, m_losses = 0, m_ties = 0;
   bool m_quitRequested = false;
